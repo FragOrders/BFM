@@ -1,6 +1,6 @@
-# BFM mission setup
+# BFM for DCS World
 
-`BFM.lua` adds a **BFM** F10 radio menu for every occupied BLUE airplane group.
+`BFM.lua` is a DCS World mission script for Basic Fighter Maneuvers (BFM) training. It adds a **BFM** F10 radio menu for every occupied BLUE airplane group.
 It is standalone: no MIST, MOOSE, template aircraft, or trigger zones are required.
 
 1. In the Mission Editor, assign **Combined Joint Task Forces Red** to RED.
