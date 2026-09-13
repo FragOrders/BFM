@@ -57,8 +57,35 @@ BFM.init({
     tailDistanceNm = 0.7,
     minimumClearanceFeet = 1000,
     skill = BFM.Skill.VETERAN,
+    opponents = {
+        { type = "MiG-29S", label = "MiG-29S", fuelKg = 1750 },
+        { type = "MiG-21Bis", label = "MiG-21bis", fuelKg = 1400 },
+    },
 })
 ```
+
+`opponents` replaces the entire airframe list, in menu order. Omit it to keep the
+two default MiGs. To offer only an F-5E, for example:
+
+```lua
+BFM.init({
+    opponents = {
+        { type = "F-5E-3", label = "F-5E Tiger II", fuelKg = 1000 },
+    },
+})
+```
+
+Each entry requires the exact DCS aircraft `type` identifier and a positive `fuelKg`
+amount appropriate for that aircraft's internal fuel capacity. `label` is optional
+and defaults to `type`; labels must be unique. Use a non-empty list without gaps.
+Every configured airframe gets all three setups, and longer lists use **More airframes**
+submenus. The list is copied at initialization; later table edits do not change it.
+
+Choose available AI airplanes with internal guns: external stores remain empty and
+the script does not add gun pods. Configuration validation checks the list's structure,
+not whether DCS supports a particular aircraft or fuel load. Flight-check added types
+in your mission. The bundled `.miz` keeps its embedded script/configuration until you
+replace its DO SCRIPT FILE action with the updated `BFM.lua` and save the mission.
 
 Skill names match the aircraft Mission Editor labels:
 

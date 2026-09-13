@@ -285,6 +285,57 @@ function tests.collision_and_dead_opponent()
     assert(#f.spawned == 2 and unrelated:isExist())
 end
 
+function tests.custom_airframes()
+    local f = fixture()
+    f:player(f:group(1, "Blue"), "One")
+    local airframes = { { type = "F-5E-3", label = "Tiger", fuelKg = 1000 } }
+    BFM.init({ opponents = airframes })
+    assert(#f.menus == 2 and #f.commands == 5)
+    assert(not pcall(function() f:command(1, "MiG-29S", "Neutral (head-on)") end))
+    -- Caller mutation must not change the configured aircraft, load, or reset behavior.
+    airframes[1].type, airframes[1].fuelKg = "MiG-29S", 2000
+    f:choose(1, "Tiger", "Offensive (you behind)")
+    local unit = f.spawned[1].data.units[1]
+    assert(unit.type == "F-5E-3" and unit.payload.fuel == 1000)
+    assert(next(unit.payload.pylons) == nil and unit.payload.gun == 100)
+    f:choose(1, "BFM", "Reset last opponent")
+    assert(f.spawned[2].data.units[1].type == "F-5E-3")
+    f:advance(1)
+    assert(f.spawned[2].task.params.groupId == 1)
+end
+
+function tests.airframe_list_validation_and_paging()
+    local f = fixture()
+    f:player(f:group(1, "Blue"), "One")
+    local invalidLists = {
+        {}, "MiG-29S", { "MiG-29S" }, { { type = "", fuelKg = 1000 } },
+        { { type = "MiG-29S" } }, { { type = "MiG-29S", fuelKg = -1 } },
+        { { type = "MiG-29S", fuelKg = math.huge } },
+        { { type = "MiG-29S", fuelKg = 1000, label = " " } },
+        { { type = "MiG-29S", fuelKg = 1000 }, { type = "MiG-29S", fuelKg = 1000 } },
+        { [1] = { type = "MiG-29S", fuelKg = 1000 }, [3] = { type = "F-5E-3", fuelKg = 1000 } },
+    }
+    for _, list in ipairs(invalidLists) do
+        assert(not pcall(BFM.init, { opponents = list }))
+        assert(#f.menus == 0 and #f.scheduled == 0)
+    end
+    local airframes = { { type = "MiG-29S", fuelKg = 1750 } }
+    for index = 2, 16 do
+        airframes[index] = { type = "MiG-21Bis", label = "Fishbed " .. index, fuelKg = 1400 }
+    end
+    BFM.init({ opponents = airframes })
+    assert(#f.commands == 16 * 3 + 2)
+    assert(f:command(1, "MiG-29S", "Neutral (head-on)").parent.parent.label == "BFM")
+    for _, menu in ipairs(f.menus) do
+        local children = 0
+        for _, child in ipairs(f.menus) do if child.parent == menu then children = children + 1 end end
+        for _, command in ipairs(f.commands) do if command.parent == menu then children = children + 1 end end
+        assert(children <= 10, "radio menu overflow")
+    end
+    f:choose(1, "Fishbed 16", "Defensive (enemy behind)")
+    assert(f.spawned[1].data.units[1].type == "MiG-21Bis")
+end
+
 local passed = 0
 for name, test in pairs(tests) do
     test()

@@ -10,6 +10,7 @@ do
     local MENU_INTERVAL = 5
     local CONTROLLER_DELAY = 1
     local MESSAGE_SECONDS = 12
+    local AIRFRAMES_PER_MENU = 7
     local MIN_SPEED = 150 -- m/s; keep the AI above a practical spawn speed
     local MAX_SPEED = 350
     local ROUTE_LENGTH = 10 * METERS_PER_NM
@@ -32,7 +33,7 @@ do
         { kind = BFM.Setup.OFFENSIVE, label = "Offensive (you behind)", positionSign = 1, headingOffset = 0 },
         { kind = BFM.Setup.DEFENSIVE, label = "Defensive (enemy behind)", positionSign = -1, headingOffset = 0 },
     }
-    local opponents = {
+    local defaultOpponents = {
         { label = "MiG-29S", type = "MiG-29S", fuelKg = 1750 },
         { label = "MiG-21bis", type = "MiG-21Bis", fuelKg = 1400 },
     }
@@ -193,8 +194,12 @@ do
         local session = { groupID = group:getID(), groupName = group:getName() }
         sessions[session.groupID] = session
         session.menu = missionCommands.addSubMenuForGroup(session.groupID, "BFM")
-        for _, opponent in ipairs(opponents) do
-            local menu = missionCommands.addSubMenuForGroup(session.groupID, opponent.label, session.menu)
+        local airframeMenu = session.menu
+        for index, opponent in ipairs(config.opponents) do
+            if index > 1 and (index - 1) % AIRFRAMES_PER_MENU == 0 then
+                airframeMenu = missionCommands.addSubMenuForGroup(session.groupID, "More airframes", airframeMenu)
+            end
+            local menu = missionCommands.addSubMenuForGroup(session.groupID, opponent.label, airframeMenu)
             for _, setup in ipairs(setups) do
                 missionCommands.addCommandForGroup(session.groupID, setup.label, menu, spawnOpponent,
                     { session = session, opponent = opponent, setup = setup })
@@ -257,6 +262,7 @@ do
             tailDistanceNm = 0.7,
             minimumClearanceFeet = 1000,
             skill = BFM.Skill.VETERAN,
+            opponents = defaultOpponents,
         }
         for key, value in pairs(options or {}) do
             assert(config[key] ~= nil, "BFM: unknown configuration option " .. tostring(key))
@@ -272,11 +278,39 @@ do
             if config.skill == skill then validSkill = true end
         end
         assert(validSkill, "BFM: skill must be a BFM.Skill value")
+        assert(type(config.opponents) == "table" and #config.opponents > 0,
+            "BFM: opponents must be a non-empty array")
+        local configuredOpponents, labels = {}, {}
+        local count = 0
+        for key in pairs(config.opponents) do
+            assert(type(key) == "number" and key >= 1 and key <= #config.opponents and key % 1 == 0,
+                "BFM: opponents must be a contiguous array")
+            count = count + 1
+        end
+        assert(count == #config.opponents, "BFM: opponents must be a contiguous array")
+        for index, opponent in ipairs(config.opponents) do
+            local context = "BFM: opponents[" .. index .. "] "
+            assert(type(opponent) == "table", context .. "must be a table")
+            assert(type(opponent.type) == "string" and opponent.type:find("%S"),
+                context .. "requires a DCS aircraft type")
+            -- label is optional; the aircraft type is its documented default.
+            local label = opponent.label
+            if label == nil then label = opponent.type end
+            assert(type(label) == "string" and label:find("%S"), context .. "label must be non-empty")
+            assert(not labels[label], context .. "label must be unique")
+            local fuel = opponent.fuelKg
+            assert(type(fuel) == "number" and fuel > 0 and fuel < math.huge,
+                context .. "fuelKg must be a finite positive number")
+            labels[label] = true
+            configuredOpponents[index] = { label = label, type = opponent.type, fuelKg = fuel }
+        end
+        -- Own a snapshot so later edits to the caller's table cannot alter live menus or resets.
+        config.opponents = configuredOpponents
         assert(coalition.getCountryCoalition(config.opponentCountry) == coalition.side.RED,
             "BFM: opponentCountry must belong to RED in this mission")
         updateMenus(nil, timer.getTime())
         timer.scheduleFunction(updateMenus, nil, timer.getTime() + MENU_INTERVAL)
         initialized = true
-        env.info("BFM initialized: MiG-29S and MiG-21bis, guns only")
+        env.info(string.format("BFM initialized: %d airframes, guns only", #config.opponents))
     end
 end
