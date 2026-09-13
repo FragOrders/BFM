@@ -1,7 +1,7 @@
 -- Standalone, guns-only BFM for BLUE player airplane groups; no MIST/MOOSE needed.
 -- Mission start: DO SCRIPT FILE BFM.lua, then DO SCRIPT BFM.init().
 -- Put Combined Joint Task Forces Red on RED in the mission's country setup.
--- See BFM.md for configuration, multiplayer behavior, and mission checks.
+-- See README.md for configuration, multiplayer behavior, and mission checks.
 BFM = {}
 
 do
