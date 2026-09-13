@@ -13,7 +13,7 @@ file only once; repeated `BFM.init()` calls are harmless and keep the original s
 
 ## Radio menu
 
-Choose **F10 Other → BFM → MiG-29S / MiG-21bis**, then:
+Choose **F10 Other → BFM → aircraft**, then:
 
 | Setup | Opponent's starting position | Opponent's heading |
 | --- | --- | --- |
@@ -22,7 +22,7 @@ Choose **F10 Other → BFM → MiG-29S / MiG-21bis**, then:
 | Defensive | 0.7 NM behind | Same as you; it starts behind you |
 
 Each selection spawns one armed AI opponent with guns only, no external stores,
-and Veteran skill. MiG-29S starts with 1,750 kg fuel; MiG-21bis with 1,400 kg.
+and Veteran skill, using the starting fuel listed below.
 The opponent starts at your altitude and matches your current velocity magnitude,
 clamped to 150–350 m/s. Position uses the horizontal projection of your nose heading.
 Set up in approximately level flight. A spawn is refused if its location has less
@@ -46,6 +46,22 @@ aircraft or defensive reactions. When the group has no airborne players left, it
 opponent is removed on the next five-second check. When no players remain in the
 group, its menu and saved selection are removed too.
 
+## Default airframes
+
+Calling `BFM.init()` without an `opponents` override offers these five airframes:
+
+| Menu label | DCS aircraft type | Starting fuel |
+| --- | --- | --- |
+| MiG-29S | `MiG-29S` | 1,750 kg |
+| Su-27 | `Su-27` | 4,700 kg |
+| MiG-21bis | `MiG-21Bis` | 1,400 kg |
+| F-5E | `F-5E-3` | 1,000 kg |
+| F-16C | `F-16C_50` (Block 50) | 1,600 kg |
+
+All five use guns only and offer neutral, offensive, and defensive setups. Fuel
+amounts are BFM starting loads, not full-tank capacities. MiG-29S and MiG-21bis have
+been tried in-mission; Su-27, F-5E, and F-16C still need in-mission verification.
+
 ## Optional settings
 
 Replace `BFM.init()` with, for example:
@@ -59,13 +75,16 @@ BFM.init({
     skill = BFM.Skill.VETERAN,
     opponents = {
         { type = "MiG-29S", label = "MiG-29S", fuelKg = 1750 },
+        { type = "Su-27", label = "Su-27", fuelKg = 4700 },
         { type = "MiG-21Bis", label = "MiG-21bis", fuelKg = 1400 },
+        { type = "F-5E-3", label = "F-5E", fuelKg = 1000 },
+        { type = "F-16C_50", label = "F-16C", fuelKg = 1600 },
     },
 })
 ```
 
 `opponents` replaces the entire airframe list, in menu order. Omit it to keep the
-two default MiGs. To offer only an F-5E, for example:
+five default airframes. To offer only an F-5E, for example:
 
 ```lua
 BFM.init({
@@ -112,7 +131,7 @@ These check menu lifecycle, spawn geometry, task targeting, reset/removal isolat
 terrain rejection, and delayed-controller behavior. They do not simulate DCS AI or
 validate aircraft payload acceptance in the running simulator.
 
-In DCS, try both aircraft and all three setups over flat terrain. Confirm heading,
+In DCS, try all five aircraft and all three setups over flat terrain. Confirm heading,
 altitude, guns-only loadout, and engagement. Then check reset/removal, a late join,
 death/respawn, and two independent player groups. Check `Saved Games/DCS.../Logs/dcs.log`
 for script errors. These in-mission checks are still required.

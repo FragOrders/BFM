@@ -35,7 +35,10 @@ do
     }
     local defaultOpponents = {
         { label = "MiG-29S", type = "MiG-29S", fuelKg = 1750 },
+        { label = "Su-27", type = "Su-27", fuelKg = 4700 },
         { label = "MiG-21bis", type = "MiG-21Bis", fuelKg = 1400 },
+        { label = "F-5E", type = "F-5E-3", fuelKg = 1000 },
+        { label = "F-16C", type = "F-16C_50", fuelKg = 1600 },
     }
 
     local config

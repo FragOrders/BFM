@@ -149,7 +149,10 @@ function tests.geometry_and_payloads()
     }
     for _, heading in ipairs({ 0, math.pi / 2, math.pi, 3 * math.pi / 2 }) do
         player.position.x = { x = math.cos(heading), y = 0, z = math.sin(heading) }
-        for _, aircraft in ipairs({ { "MiG-29S", "MiG-29S" }, { "MiG-21bis", "MiG-21Bis" } }) do
+        for _, aircraft in ipairs({
+            { "MiG-29S", "MiG-29S" }, { "Su-27", "Su-27" }, { "MiG-21bis", "MiG-21Bis" },
+            { "F-5E", "F-5E-3" }, { "F-16C", "F-16C_50" },
+        }) do
             for _, case in ipairs(cases) do
                 f:choose(1, aircraft[1], case.label)
                 local group = f.spawned[#f.spawned]
@@ -168,7 +171,7 @@ function tests.geometry_and_payloads()
             end
         end
     end
-    assert(#f.spawned == 24)
+    assert(#f.spawned == 60)
 end
 
 function tests.reset_and_isolation()
@@ -227,7 +230,7 @@ function tests.menu_and_player_lifecycle()
     lead.airborne = false
     wing.position.p.x = 9000
     f:advance(5)
-    assert(#f.menus == 3 and #f.commands == 8)
+    assert(#f.menus == 6 and #f.commands == 17)
     f:choose(1, "BFM", "Reset last opponent")
     assert(#f.spawned == 0)
     f:choose(1, "MiG-29S", "Neutral (head-on)")
@@ -241,7 +244,7 @@ function tests.menu_and_player_lifecycle()
     assert(f.menus[1].removed)
     lead.occupied, lead.airborne = true, true
     f:advance(5)
-    assert(#f.menus == 6)
+    assert(#f.menus == 12)
     stale.callback(stale.args)
     assert(#f.spawned == 1)
     f:choose(1, "MiG-21bis", "Neutral (head-on)")
